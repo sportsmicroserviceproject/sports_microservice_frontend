@@ -1,0 +1,34 @@
+name: Deploy Sports Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '*.html'
+      - '.github/workflows/deploy_frontend.yml'
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install lftp
+      run: |
+        sudo apt-get update && sudo apt-get install -y lftp
+
+    - name: Create sports directory structure
+      run: |
+        mkdir -p ./frontend_publish
+        cp *.html ./frontend_publish/
+        # Copy any CSS/JS files if you add them later
+        # cp -r assets/ ./frontend_publish/ || true
+
+    - name: Upload frontend to Loopia FTP
+      run: |
+        lftp -c "
+          open -u ${{ secrets.LOOPIA_FTP_USER }},${{ secrets.LOOPIA_FTP_PASS }} ${{ secrets.LOOPIA_FTP_HOST }};
+          mirror -R ./frontend_publish mymh.dev/public_html/sports;
+          quit"
