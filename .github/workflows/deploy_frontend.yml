@@ -22,13 +22,27 @@ jobs:
     - name: Create sports directory structure
       run: |
         mkdir -p ./frontend_publish
+        echo "Copying HTML files..."
         cp *.html ./frontend_publish/
-        # Copy any CSS/JS files if you add them later
-        # cp -r assets/ ./frontend_publish/ || true
+        
+        echo "Checking for assets directory..."
+        ls -la
+        
+        if [ -d "assets" ]; then
+          echo "Assets directory found, copying..."
+          cp -r assets/ ./frontend_publish/
+          echo "Contents of frontend_publish after copying assets:"
+          ls -la ./frontend_publish/
+        else
+          echo "Assets directory not found!"
+          echo "Current directory contents:"
+          ls -la
+        fi
 
     - name: Upload frontend to Loopia FTP
       run: |
         lftp -c "
           open -u ${{ secrets.LOOPIA_FTP_USER }},${{ secrets.LOOPIA_FTP_PASS }} ${{ secrets.LOOPIA_FTP_HOST }};
+          mkdir -p mymh.dev/public_html/sports;
           mirror -R ./frontend_publish mymh.dev/public_html/sports;
           quit"
